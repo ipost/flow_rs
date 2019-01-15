@@ -15,13 +15,19 @@ step two is
 a two-line step;
 if some condition {
   do a thing;
+  if it's sunday {
+    thinking emoji;
+  }
   exit;
 }
-do the rest;
+some more;
+while something is happening {
+  do that other thing;
+}
 ";
 
 fn main() {
-    let pairs = IdentParser::parse(Rule::process, STUFF).unwrap_or_else(|e| panic!("{}", e));
+    let pairs = IdentParser::parse(Rule::all, STUFF).unwrap_or_else(|e| panic!("{}", e));
 
     for pair in pairs {
         print_pair(pair, 0);
@@ -29,10 +35,20 @@ fn main() {
 }
 
 fn print_pair(pair: Pair<Rule>, depth: usize) {
-    let span = pair.clone().into_span();
-    println!("{}Rule: {:?}", " ".repeat(depth), pair.as_rule());
-    println!("{}Span: {:?}", " ".repeat(depth), span);
-    //println!("{}Text: {}", " ".repeat(depth), span.as_str());
+    let indent = " ".repeat(depth);
+    //println!("{}Rule: {:?}\n{}      {:?}",
+    //         indent, pair.as_rule(), indent, pair.as_str());
+    match pair.as_rule() {
+        Rule::all => println!("all:"),
+        Rule::step => println!("{}step:", indent),
+        Rule::process => println!("{}process:", indent),
+        Rule::if_branch => println!("{}if_branch:", indent),
+        Rule::while_loop => println!("{}while_loop:", indent),
+        Rule::condition => println!("{}condition:", indent),
+        Rule::expression => println!("{}expression: \"{}\"", indent, pair.as_str()),
+        Rule::EOI => {},
+        _ => unreachable!(),
+    }
 
     for inner_pair in pair.into_inner() {
         print_pair(inner_pair, 2 + depth);

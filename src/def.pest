@@ -1,10 +1,16 @@
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
 
-process = { (if_branch | step | WHITESPACE)+ }
+all = { SOI ~ process ~ EOI }
 
-if_branch = ${ "if" ~ WHITESPACE+ ~ expression ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" }
+process = { (if_branch | while_loop | step | WHITESPACE)+ }
+
+if_branch = ${ "if" ~ WHITESPACE+ ~ condition ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" }
+
+while_loop = ${ "while" ~ WHITESPACE+ ~ condition ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" }
+
+condition = { expression }
 
 step = { expression ~ terminator }
 expression = ${ nw_char ~ (nw_char | WHITESPACE)* }
-nw_char = _{ (ASCII_ALPHANUMERIC | "." | "_" | "-" | "/" | "(" | ")") }
+nw_char = _{ (ASCII_ALPHANUMERIC | "\"" | "'" | "." | "_" | "-" | "/" | "(" | ")") }
 terminator = _{ ";" }

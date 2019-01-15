@@ -3,6 +3,12 @@ step two is
 a two-line step;
 if some condition {
   do a thing;
+  if it's sunday {
+    thinking emoji;
+  }
   exit;
 }
-do the rest;
+some more;
+while something is happening {
+  do that other thing;
+}
