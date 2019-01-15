@@ -23,6 +23,13 @@ if some condition {
 some more;
 while something is happening {
   do that other thing;
+  if it's sunday {
+    more thinking emoji;
+  }
+  if it's saturday {
+    NO thinking emoji;
+    some sunglasses emoji;
+  }
 }
 ";
 
@@ -36,8 +43,6 @@ fn main() {
 
 fn print_pair(pair: Pair<Rule>, depth: usize) {
     let indent = " ".repeat(depth);
-    //println!("{}Rule: {:?}\n{}      {:?}",
-    //         indent, pair.as_rule(), indent, pair.as_str());
     match pair.as_rule() {
         Rule::all => println!("all:"),
         Rule::step => println!("{}step:", indent),
@@ -52,13 +57,5 @@ fn print_pair(pair: Pair<Rule>, depth: usize) {
 
     for inner_pair in pair.into_inner() {
         print_pair(inner_pair, 2 + depth);
-        // let inner_span = inner_pair.clone().into_span();
-        // match inner_pair.as_rule() {
-        //     Rule::step => println!("step:       {}", inner_span.as_str()),
-        //     Rule::process => println!("process:    {}", inner_span.as_str()),
-        //     Rule::if_branch => println!("if_branch:  {}", inner_span.as_str()),
-        //     Rule::expression => println!("expression: {}", inner_span.as_str()),
-        //     _ => unreachable!(),
-        // };
     }
 }
