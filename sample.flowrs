@@ -1,0 +1,8 @@
+first step;
+step two is
+a two-line step;
+if some condition {
+  do a thing;
+  exit;
+}
+do the rest;

@@ -1,0 +1,16 @@
+digraph L {
+
+  node [shape=record fontname=Arial];
+
+  a  [label="a"]
+  b  [label="b"]
+  c  [label="c"]
+
+  a -> b -> c
+
+  d  [label="d", shape=diamond]
+
+  node [ fontname=Arial];
+
+  a -> d
+}
