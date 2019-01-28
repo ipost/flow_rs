@@ -1,4 +1,4 @@
-extern crate pest;
+extern crate pest; // can remove?
 #[macro_use]
 extern crate pest_derive;
 
@@ -7,142 +7,18 @@ use pest::Parser;
 use std::fs::File;
 use std::io::Write;
 
+mod attr;
+mod dot_writer;
+mod edge;
+mod node;
+
+use dot_writer::DotWriter;
+use edge::Edge;
+use node::Node;
+
 #[derive(Parser)]
 #[grammar = "def.pest"]
 struct IdentParser;
-
-#[derive(Copy, Clone)]
-enum NodeShape {
-    Rectangle,
-    Diamond,
-}
-
-#[derive(Clone)]
-struct Node {
-    pub id: String,
-    pub label: Option<String>,
-    pub shape: Option<NodeShape>,
-    pub color: Option<String>,
-}
-
-impl Node {
-    pub fn new(id: String) -> Self {
-        Node {
-            id: id,
-            label: None,
-            shape: None,
-            color: None,
-        }
-    }
-
-    pub fn labelled(mut self, l: String) -> Self {
-        self.label = Some(l);
-        self
-    }
-
-    pub fn diamond(mut self) -> Self {
-        self.shape = Some(NodeShape::Diamond);
-        self
-    }
-
-    pub fn rectangle(mut self) -> Self {
-        self.shape = Some(NodeShape::Rectangle);
-        self
-    }
-
-    pub fn red(mut self) -> Self {
-        self.color = Some("red".to_string());
-        self
-    }
-
-    pub fn color(&self) -> String {
-        match &self.color {
-            Some(s) => s.clone(),
-            None => "black".to_string(),
-        }
-    }
-
-    pub fn shape(&self) -> NodeShape {
-        match &self.shape {
-            Some(s) => s.clone(),
-            None => NodeShape::Rectangle,
-        }
-    }
-
-    pub fn label_str(&self) -> &str {
-        match &self.label {
-            Some(l) => l,
-            None => &"",
-        }
-    }
-}
-
-#[derive(Clone)]
-struct Edge {
-    pub label: Option<String>,
-    pub start_node: Node,
-}
-
-impl Edge {
-    pub fn starting_at(n: Node) -> Self {
-        Edge {
-            start_node: n,
-            label: None,
-        }
-    }
-
-    pub fn labelled(mut self, l: String) -> Self {
-        self.label = Some(l);
-        self
-    }
-
-    pub fn start_id(&self) -> &str {
-        &self.start_node.id
-    }
-}
-
-struct DotWriter {
-    dot: String,
-}
-
-impl DotWriter {
-    pub fn new() -> DotWriter {
-        DotWriter {
-            dot: "".to_string(),
-        }
-    }
-
-    pub fn write_edge(&mut self, edge: &Edge, end: &Node) {
-        let mut writeable = format!("{} -> {}", edge.start_id(), end.id);
-        if let Some(label) = &edge.label {
-            writeable.push_str(&format!(" [label=\"{}\"]", label))
-        }
-        writeable.push_str(";");
-        self.write_line(&writeable);
-    }
-
-    pub fn write_node(&mut self, node: &Node) {
-        let writeable = format!(
-            "{} [label=\"{}\",shape={},color={}];",
-            node.id,
-            node.label_str(),
-            match node.shape() {
-                NodeShape::Rectangle => "box",
-                NodeShape::Diamond => "diamond",
-            },
-            node.color(),
-        );
-        self.write_line(&writeable);
-    }
-
-    pub fn write_line(&mut self, line: &str) {
-        self.dot.push_str(&format!("{}\n", line.trim()));
-    }
-
-    pub fn consume(self) -> String {
-        self.dot
-    }
-}
 
 const STUFF: &str = "
  first step;
@@ -173,14 +49,20 @@ while something is happening {
 }
 if some_condition {
     the last step;
+    if a sub_condition {
+        a1;
+        its step;
+    }
 }
 ";
 
 /*
  * ideas
  * =====================================
+ * support for else
  * escape characters in node labels
  * case statement
+ * render implicit exits on false
  */
 
 fn main() {
@@ -238,7 +120,7 @@ fn dotify_all(mut pairs: Pairs<Rule>, mut id_generator: &mut Box<FnMut() -> Stri
         _ => unreachable!(),
     };
     for exit_point in exit_points.iter() {
-        dot.write_node(&exit_point.start_node.clone().red());
+        dot.write_node(&exit_point.start_node.clone().terminal());
     }
     dot.consume()
 }
@@ -293,7 +175,7 @@ fn dotify_step(
                     let exit_node = Node::new(id_generator())
                         .labelled("Exit".to_string())
                         .rectangle()
-                        .red();
+                        .terminal();
                     dot.write_node(&exit_node);
                     for entry_point in entry_points.iter() {
                         dot.write_edge(entry_point, &exit_node);
