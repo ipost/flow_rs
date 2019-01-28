@@ -146,6 +146,9 @@ impl DotWriter {
 
 const STUFF: &str = "
  first step;
+ if we should exit early {
+ exit;
+ }
 step two is
 a two-line step;
 if some condition {
@@ -203,6 +206,7 @@ fn print_pair(pair: Pair<Rule>, depth: usize) {
     match pair.as_rule() {
         Rule::all => println!("all:"),
         Rule::step => println!("{}step:", indent),
+        Rule::exit => println!("{}EXIT", indent),
         Rule::process => println!("{}process:", indent),
         Rule::if_branch => println!("{}if_branch:", indent),
         Rule::while_loop => println!("{}while_loop:", indent),
