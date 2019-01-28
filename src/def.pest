@@ -10,7 +10,8 @@ while_loop = ${ "while" ~ WHITESPACE+ ~ condition ~ WHITESPACE* ~ "{" ~ WHITESPA
 
 condition = { expression }
 
-step = { expression ~ terminator }
+step = { exit ~ terminator | expression ~ terminator }
+exit = { "exit" }
 expression = ${ nw_char ~ (nw_char | WHITESPACE)* }
 nw_char = _{ (ASCII_ALPHANUMERIC | "\"" | "'" | "." | "_" | "-" | "/" | "(" | ")") }
 terminator = _{ ";" }

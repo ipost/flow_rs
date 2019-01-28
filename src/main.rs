@@ -22,6 +22,7 @@ struct Node {
     pub id: String,
     pub label: Option<String>,
     pub shape: Option<NodeShape>,
+    pub color: Option<String>,
 }
 
 impl Node {
@@ -30,6 +31,7 @@ impl Node {
             id: id,
             label: None,
             shape: None,
+            color: None,
         }
     }
 
@@ -46,6 +48,18 @@ impl Node {
     pub fn rectangle(mut self) -> Self {
         self.shape = Some(NodeShape::Rectangle);
         self
+    }
+
+    pub fn red(mut self) -> Self {
+        self.color = Some("red".to_string());
+        self
+    }
+
+    pub fn color(&self) -> String {
+        match &self.color {
+            Some(s) => s.clone(),
+            None => "black".to_string(),
+        }
     }
 
     pub fn shape(&self) -> NodeShape {
@@ -101,7 +115,7 @@ impl DotWriter {
     pub fn write_edge(&mut self, edge: &Edge, end: &Node) {
         let mut writeable = format!("{} -> {}", edge.start_id(), end.id);
         if let Some(label) = &edge.label {
-            writeable.push_str(&format!("[label=\"{}\"]", label))
+            writeable.push_str(&format!(" [label=\"{}\"]", label))
         }
         writeable.push_str(";");
         self.write_line(&writeable);
@@ -109,19 +123,20 @@ impl DotWriter {
 
     pub fn write_node(&mut self, node: &Node) {
         let writeable = format!(
-            "{} [label=\"{}\",shape={}];",
+            "{} [label=\"{}\",shape={},color={}];",
             node.id,
             node.label_str(),
             match node.shape() {
                 NodeShape::Rectangle => "box",
                 NodeShape::Diamond => "diamond",
-            }
+            },
+            node.color(),
         );
         self.write_line(&writeable);
     }
 
     pub fn write_line(&mut self, line: &str) {
-        self.dot.push_str(&format!("{}\n", line));
+        self.dot.push_str(&format!("{}\n", line.trim()));
     }
 
     pub fn consume(self) -> String {
@@ -137,8 +152,10 @@ if some condition {
   do a thing;
   if it's sunday {
     thinking emoji;
+    if we want to exit {
+        exit;
+    }
   }
-  exit;
 }
 some more;
 while something is happening {
@@ -151,14 +168,16 @@ while something is happening {
     some sunglasses emoji;
   }
 }
-the last step;
+if some_condition {
+    the last step;
+}
 ";
 
 /*
  * ideas
+ * =====================================
  * escape characters in node labels
- * colors
- * an exit statement
+ * case statement
  */
 
 fn main() {
@@ -210,12 +229,14 @@ fn make_dot(pairs: Pairs<Rule>) -> String {
 
 fn dotify_all(mut pairs: Pairs<Rule>, mut id_generator: &mut Box<FnMut() -> String>) -> String {
     let pair = pairs.next().unwrap();
-    match pair.as_rule() {
+    let (mut dot, exit_points) = match pair.as_rule() {
         Rule::all => dotify_process(pair.into_inner().next().unwrap(), vec![], &mut id_generator),
         _ => unreachable!(),
+    };
+    for exit_point in exit_points.iter() {
+        dot.write_node(&exit_point.start_node.clone().red());
     }
-    .0
-    .consume()
+    dot.consume()
 }
 
 fn dotify_process(
@@ -251,14 +272,33 @@ fn dotify_step(
     let mut dot = DotWriter::new();
     let exits = match pair.as_rule() {
         Rule::step => {
-            let exit_node = Node::new(id_generator())
-                .labelled(pair.as_str().to_string())
-                .rectangle();
-            dot.write_node(&exit_node);
-            for entry_point in entry_points.iter() {
-                dot.write_edge(entry_point, &exit_node);
-            }
-            vec![Edge::starting_at(exit_node)]
+            let mut pairs = pair.into_inner();
+            let pair = pairs.next().unwrap();
+            let exit_points = match pair.as_rule() {
+                Rule::expression => {
+                    let exit_node = Node::new(id_generator())
+                        .labelled(pair.as_str().to_string())
+                        .rectangle();
+                    dot.write_node(&exit_node);
+                    for entry_point in entry_points.iter() {
+                        dot.write_edge(entry_point, &exit_node);
+                    }
+                    vec![Edge::starting_at(exit_node)]
+                }
+                Rule::exit => {
+                    let exit_node = Node::new(id_generator())
+                        .labelled("Exit".to_string())
+                        .rectangle()
+                        .red();
+                    dot.write_node(&exit_node);
+                    for entry_point in entry_points.iter() {
+                        dot.write_edge(entry_point, &exit_node);
+                    }
+                    vec![]
+                }
+                _ => unreachable!(),
+            };
+            exit_points
         }
         _ => unreachable!(),
     };
