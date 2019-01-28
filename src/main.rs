@@ -11,10 +11,17 @@ use std::io::Write;
 #[grammar = "def.pest"]
 struct IdentParser;
 
+#[derive(Copy, Clone)]
+enum NodeShape {
+    Rectangle,
+    Diamond,
+}
+
 #[derive(Clone)]
 struct Node {
     pub id: String,
     pub label: Option<String>,
+    pub shape: Option<NodeShape>,
 }
 
 impl Node {
@@ -22,12 +29,30 @@ impl Node {
         Node {
             id: id,
             label: None,
+            shape: None,
         }
     }
 
     pub fn labelled(mut self, l: String) -> Self {
         self.label = Some(l);
         self
+    }
+
+    pub fn diamond(mut self) -> Self {
+        self.shape = Some(NodeShape::Diamond);
+        self
+    }
+
+    pub fn rectangle(mut self) -> Self {
+        self.shape = Some(NodeShape::Rectangle);
+        self
+    }
+
+    pub fn shape(&self) -> NodeShape {
+        match &self.shape {
+            Some(s) => s.clone(),
+            None => NodeShape::Rectangle,
+        }
     }
 
     pub fn label_str(&self) -> &str {
@@ -83,7 +108,15 @@ impl DotWriter {
     }
 
     pub fn write_node(&mut self, node: &Node) {
-        let writeable = format!("{} [label=\"{}\"];", node.id, node.label_str());
+        let writeable = format!(
+            "{} [label=\"{}\",shape={}];",
+            node.id,
+            node.label_str(),
+            match node.shape() {
+                NodeShape::Rectangle => "box",
+                NodeShape::Diamond => "diamond",
+            }
+        );
         self.write_line(&writeable);
     }
 
@@ -123,7 +156,7 @@ the last step;
 
 /*
  * ideas
- * different shaped nodes
+ * escape characters in node labels
  * colors
  * an exit statement
  */
@@ -218,7 +251,9 @@ fn dotify_step(
     let mut dot = DotWriter::new();
     let exits = match pair.as_rule() {
         Rule::step => {
-            let exit_node = Node::new(id_generator()).labelled(pair.as_str().to_string());
+            let exit_node = Node::new(id_generator())
+                .labelled(pair.as_str().to_string())
+                .rectangle();
             dot.write_node(&exit_node);
             for entry_point in entry_points.iter() {
                 dot.write_edge(entry_point, &exit_node);
@@ -292,7 +327,9 @@ fn dotify_condition(
     let mut dot = DotWriter::new();
     let condition_name = match pair.as_rule() {
         Rule::condition => {
-            let condition_node = Node::new(id_generator()).labelled(pair.as_str().to_string());
+            let condition_node = Node::new(id_generator())
+                .labelled(pair.as_str().to_string())
+                .diamond();
             dot.write_node(&condition_node);
             for entry_point in entry_points {
                 dot.write_edge(&entry_point, &condition_node);
