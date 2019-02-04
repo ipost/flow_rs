@@ -37,9 +37,13 @@ impl Attr {
     pub fn as_dot(&self) -> String {
         match self {
             Attr::PenWidth(w) => format!("penwidth={}", w),
-            Attr::Color(c) => format!("color={}", c),
-            Attr::Label(l) => format!("label=\"{}\"", l),
-            Attr::Shape(s) => format!("shape=\"{}\"", s.as_dot()),
+            Attr::Color(c) => format!("color={}", escaped(c)),
+            Attr::Label(l) => format!("label=\"{}\"", escaped(l)),
+            Attr::Shape(s) => format!("shape=\"{}\"", escaped(&s.as_dot())),
         }
     }
+}
+
+fn escaped(s: &String) -> String {
+    str::replace(s, "\"", "\\\"")
 }

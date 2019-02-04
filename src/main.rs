@@ -28,7 +28,6 @@ struct IdentParser;
  * ideas
  * =====================================
  * support for else
- * escape characters in node labels
  * case statement
  * render implicit exits on false
  */
