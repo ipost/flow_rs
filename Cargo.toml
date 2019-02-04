@@ -5,5 +5,6 @@ authors = ["ipost <ipost@covermymeds.com>"]
 edition = "2018"
 
 [dependencies]
+clap = "*"
 pest = "*"
 pest_derive = "*"

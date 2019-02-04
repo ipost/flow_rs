@@ -1,60 +1,28 @@
-extern crate pest; // can remove?
 #[macro_use]
 extern crate pest_derive;
 
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::Write;
+use std::io::*;
+use std::path::PathBuf;
 
 mod attr;
 mod dot_writer;
 mod edge;
 mod node;
+mod params;
 
 use dot_writer::DotWriter;
 use edge::Edge;
 use node::Node;
+use params::parameters;
 
 #[derive(Parser)]
 #[grammar = "def.pest"]
 struct IdentParser;
-
-const STUFF: &str = "
- first step;
- if we should exit early {
- exit;
- }
-step two is
-a two-line step;
-if some condition {
-  do a thing;
-  if it's sunday {
-    thinking emoji;
-    if we want to exit {
-        exit;
-    }
-  }
-}
-some more;
-while something is happening {
-  do that other thing;
-  if it's sunday {
-    more thinking emoji;
-  }
-  if it's saturday {
-    NO thinking emoji;
-    some sunglasses emoji;
-  }
-}
-if some_condition {
-    the last step;
-    if a sub_condition {
-        a1;
-        its step;
-    }
-}
-";
 
 /*
  * ideas
@@ -66,8 +34,11 @@ if some_condition {
  */
 
 fn main() {
-    let print_ast = false;
-    let pairs = IdentParser::parse(Rule::all, STUFF).unwrap_or_else(|e| panic!("{}", e));
+    let parameters = parameters();
+    let print_ast = parameters.print_ast;
+    let input = get_input_string(parameters.in_file);
+
+    let pairs = IdentParser::parse(Rule::all, &input).unwrap_or_else(|e| panic!("{}", e));
 
     if print_ast {
         for pair in pairs.clone() {
@@ -77,10 +48,8 @@ fn main() {
 
     let dot = make_dot(pairs);
 
-    let mut file = File::create("testout.dot").unwrap();
-    file.write(&dot.as_bytes()).unwrap();
-
-    println!("dot:\n{}", dot);
+    let mut output = get_output_handle(parameters.out_file);
+    output.write(&dot.as_bytes()).unwrap();
 }
 
 fn print_pair(pair: Pair<Rule>, depth: usize) {
@@ -274,4 +243,40 @@ fn make_id_generator() -> Box<FnMut() -> String> {
         suffix += 1;
         name
     })
+}
+
+fn get_input_string(file_path: Option<PathBuf>) -> String {
+    match file_path {
+        Some(f) => {
+            let mut file = match File::open(f) {
+                Ok(f) => f,
+                Err(_e) => panic!("cannot open file"),
+            };
+            let mut contents = String::new();
+            match file.read_to_string(&mut contents) {
+                Ok(_) => contents,
+                Err(_e) => panic!("cannot read file"),
+            }
+        }
+        None => {
+            let mut input = String::new();
+            match std::io::stdin().read_to_string(&mut input) {
+                Ok(_) => input,
+                Err(_e) => panic!("cannot read STDIN"),
+            }
+        }
+    }
+}
+
+fn get_output_handle(file_path: Option<PathBuf>) -> Box<Write> {
+    match file_path {
+        Some(f) => {
+            println!("writing to {}", f.clone().into_os_string().to_string_lossy());
+            Box::new(File::create(f).unwrap())
+        },
+        None => {
+            println!("writing to stdout");
+            Box::new(stdout())
+        }
+    }
 }

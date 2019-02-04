@@ -1,14 +1,33 @@
-first step;
+ first step;
+ if we should exit early {
+ exit;
+ }
 step two is
 a two-line step;
 if some condition {
   do a thing;
   if it's sunday {
     thinking emoji;
+    if we want to exit {
+        exit;
+    }
   }
-  exit;
 }
 some more;
 while something is happening {
   do that other thing;
+  if it's sunday {
+    more thinking emoji;
+  }
+  if it's saturday {
+    NO thinking emoji;
+    some sunglasses emoji;
+  }
+}
+if some_condition {
+    the last step;
+    if a sub_condition {
+        a1;
+        its step;
+    }
 }
