@@ -37,8 +37,7 @@ fn get_parameters() -> clap::ArgMatches<'static> {
 
 pub fn parameters() -> Parameters {
     let params = get_parameters();
-    let print_ast = params
-        .is_present("PRINT_AST");
+    let print_ast = params.is_present("PRINT_AST");
     let in_file = match params.value_of("IN_FILE") {
         Some(f) => Some(PathBuf::from(f)),
         None => None,

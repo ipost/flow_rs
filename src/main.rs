@@ -27,7 +27,6 @@ struct IdentParser;
 /*
  * ideas
  * =====================================
- * support for else
  * case statement
  * render implicit exits on false
  */
@@ -59,6 +58,7 @@ fn print_pair(pair: Pair<Rule>, depth: usize) {
         Rule::exit => println!("{}EXIT", indent),
         Rule::process => println!("{}process:", indent),
         Rule::if_branch => println!("{}if_branch:", indent),
+        Rule::else_branch => println!("{}else_branch:", indent),
         Rule::while_loop => println!("{}while_loop:", indent),
         Rule::condition => println!("{}condition:", indent),
         Rule::expression => println!("{}expression: \"{}\"", indent, pair.as_str()),
@@ -177,7 +177,22 @@ fn dotify_if(
                 id_generator,
             );
             dot.write_line(&process_dot.consume());
-            process_exits.push(condition_edge.labelled("False".to_string()));
+            match pairs.peek() {
+                Some(pair) => match pair.as_rule() {
+                    Rule::else_branch => {
+                        let mut pairs = pair.into_inner();
+                        let (process_dot, else_process_exits) = dotify_process(
+                            pairs.next().unwrap(),
+                            vec![condition_edge.clone().labelled("False".to_string())],
+                            id_generator,
+                        );
+                        dot.write_line(&process_dot.consume());
+                        process_exits.extend(else_process_exits);
+                    }
+                    _ => unreachable!(),
+                },
+                None => process_exits.push(condition_edge.labelled("False".to_string())),
+            };
             process_exits
         }
         _ => unreachable!(),
@@ -270,9 +285,12 @@ fn get_input_string(file_path: Option<PathBuf>) -> String {
 fn get_output_handle(file_path: Option<PathBuf>) -> Box<Write> {
     match file_path {
         Some(f) => {
-            println!("writing to {}", f.clone().into_os_string().to_string_lossy());
+            println!(
+                "writing to {}",
+                f.clone().into_os_string().to_string_lossy()
+            );
             Box::new(File::create(f).unwrap())
-        },
+        }
         None => {
             println!("writing to stdout");
             Box::new(stdout())

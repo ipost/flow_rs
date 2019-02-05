@@ -4,7 +4,9 @@ all = { SOI ~ process ~ EOI }
 
 process = { (if_branch | while_loop | step | WHITESPACE)+ }
 
-if_branch = ${ "if" ~ WHITESPACE+ ~ condition ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" }
+if_branch = ${ "if" ~ WHITESPACE+ ~ condition ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" ~ else_branch? }
+
+else_branch = { WHITESPACE* ~ "else" ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" }
 
 while_loop = ${ "while" ~ WHITESPACE+ ~ condition ~ WHITESPACE* ~ "{" ~ WHITESPACE* ~ process ~ WHITESPACE* ~ "}" }
 
@@ -13,5 +15,5 @@ condition = { expression }
 step = { exit ~ terminator | expression ~ terminator }
 exit = { "exit" }
 expression = ${ nw_char ~ (nw_char | WHITESPACE)* }
-nw_char = _{ (ASCII_ALPHANUMERIC | "\"" | "'" | "." | "_" | "-" | "/" | "(" | ")") }
+nw_char = _{ (ASCII_ALPHANUMERIC | "\"" | "'" | "." | "_" | "-" | "/" | "(" | ")" | "=") }
 terminator = _{ ";" }
