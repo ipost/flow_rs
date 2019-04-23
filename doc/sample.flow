@@ -1,0 +1,14 @@
+commute to work;
+while lunchtime has not arrived {
+  goof off;
+}
+get lunch;
+eat lunch;
+while the time is before 4pm {
+  do work;
+}
+if it's friday {
+  go to happy hour;
+} else {
+  go home;
+}

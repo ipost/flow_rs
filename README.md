@@ -10,7 +10,8 @@ The language is defined by the [parsing expression grammar](src/def.pest).
 
 ## Sample
 
-This code
+Given this file, `sample.flow`:
+
 ```
 commute to work;
 while lunchtime has not arrived {
@@ -27,7 +28,10 @@ if it's friday {
   go home;
 }
 ```
-generates this DOT
+
+
+Generating the DOT with `flowrs -f sample.flow` yields:
+
 ```
 strict digraph {
 n0 [label="commute to work", shape="rectangle", ];
@@ -55,6 +59,8 @@ n8 [color=red, penwidth=3, shape="rectangle", label="go to happy hour", ];
 n9 [label="go home", color=red, penwidth=3, shape="rectangle", ];
 }
 ```
-The resulting flowchart rendered with `dot`:
+
+
+Rendering the flowchart using `dot`: `flowrs -f sample.flow | dot -Tpng -o sample.png`
 
 ![Work flowchart](doc/work_sample.png?raw=true)
