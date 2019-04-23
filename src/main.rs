@@ -47,7 +47,10 @@ fn main() {
     let dot = make_dot(pairs);
 
     let mut output = get_output_handle(parameters.out_file);
-    output.write(&dot.as_bytes()).unwrap();
+    match output.write(&dot.as_bytes()) {
+        Ok(_) => {}
+        Err(e) => panic!("Could not write output: {}", e),
+    };
 }
 
 fn print_pair(pair: Pair<Rule>, depth: usize) {
@@ -284,16 +287,10 @@ fn get_input_string(file_path: Option<PathBuf>) -> String {
 
 fn get_output_handle(file_path: Option<PathBuf>) -> Box<Write> {
     match file_path {
-        Some(f) => {
-            println!(
-                "writing to {}",
-                f.clone().into_os_string().to_string_lossy()
-            );
-            Box::new(File::create(f).unwrap())
-        }
-        None => {
-            println!("writing to stdout");
-            Box::new(stdout())
-        }
+        Some(f) => match File::create(f) {
+            Ok(f) => Box::new(f),
+            Err(e) => panic!("Could not open output handle: {}", e),
+        },
+        None => Box::new(stdout()),
     }
 }
