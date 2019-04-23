@@ -56,4 +56,5 @@ n9 [label="go home", color=red, penwidth=3, shape="rectangle", ];
 }
 ```
 The resulting flowchart rendered with `dot`:
+
 ![Work flowchart](doc/work_sample.png?raw=true)
