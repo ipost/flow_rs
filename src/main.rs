@@ -75,7 +75,7 @@ fn make_dot(pairs: Pairs<Rule>) -> String {
     let mut name_gen = make_id_generator();
     let mut dot = DotWriter::new();
     let dotified_all = dotify_all(pairs, &mut name_gen);
-    dot.write_line("digraph F {");
+    dot.write_line("strict digraph {");
     dot.write_line(&dotified_all);
     dot.write_line("}");
     dot.consume()
